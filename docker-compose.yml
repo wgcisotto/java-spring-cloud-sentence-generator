@@ -1,0 +1,162 @@
+version: '2.3'
+
+
+services:
+
+  config:
+    image: wgcisotto/config-server
+    healthcheck:
+      test: ["CMD", "curl", "-I", "http://config:8081"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - 8081:8081
+    environment:
+      - SERVER_PORT=8081
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1
+    networks:
+      - sentence-network
+  
+  eureka:
+    depends_on: 
+      config:
+        condition: service_healthy
+    image: wgcisotto/eureka-server
+    ports:
+      - 8010:8010
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1
+    networks:
+      - sentence-network
+  
+  admin:
+    depends_on: 
+      config:
+        condition: service_healthy
+    image: wgcisotto/admin-server
+    ports:
+      - 8020:8020
+    environment:    
+      - SERVER_PORT=8020
+      - SPRING_CLOUD_CONFIG_URI= http://config:8081
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1
+    networks:
+      - sentence-network
+  
+  sentence-service:
+    depends_on: 
+      config:
+        condition: service_healthy
+    image: wgcisotto/sentence-server
+    ports:
+      - 8080:8080
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_CLOUD_CONFIG_URI= http://config:8081
+      # - SPRING_BOOT_ADMIN_URL= http://admin:8020
+      # - MANAGEMENT_SECURITY_ENABLED= false
+      # - management_endpoints_web_exposure_include=* 
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1
+    networks:
+      - sentence-network
+  
+  word-article:
+    depends_on: 
+      config:
+        condition: service_healthy
+    image: wgcisotto/word-server
+    ports:
+      - 8001:8001
+    environment:
+      - SERVER_PORT=8001
+      - SPRING_PROFILES_ACTIVE=article
+      - SPRING_CLOUD_CONFIG_URI= http://config:8081
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1
+    networks:
+      - sentence-network
+  
+  word-adjective:
+    depends_on: 
+      config:
+        condition: service_healthy
+    image: wgcisotto/word-server
+    ports:
+      - 8002:8002
+    environment:
+      - SERVER_PORT=8002
+      - SPRING_PROFILES_ACTIVE=adjective
+      - SPRING_CLOUD_CONFIG_URI= http://config:8081
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1
+    networks:
+      - sentence-network
+  
+  word-verb:
+    depends_on: 
+      config:
+        condition: service_healthy
+    image: wgcisotto/word-server
+    ports:
+      - 8003:8003
+    environment:
+      - SERVER_PORT=8003
+      - SPRING_PROFILES_ACTIVE=verb
+      - SPRING_CLOUD_CONFIG_URI= http://config:8081
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1
+    networks:
+      - sentence-network
+  
+  word-noun:
+    depends_on: 
+      config:
+        condition: service_healthy
+    image: wgcisotto/word-server
+    ports:
+      - 8004:8004
+    environment:
+      - SERVER_PORT=8004
+      - SPRING_PROFILES_ACTIVE=noun
+      - SPRING_CLOUD_CONFIG_URI= http://config:8081
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1
+    networks:
+      - sentence-network
+  
+  word-subject:
+    depends_on: 
+      config:
+        condition: service_healthy
+    image: wgcisotto/word-server
+    ports:
+      - 8005:8005
+    environment:
+      - SERVER_PORT=8005
+      - SPRING_PROFILES_ACTIVE=subject
+      - SPRING_CLOUD_CONFIG_URI= http://config:8081
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1
+    networks:
+      - sentence-network
+
+networks:
+  sentence-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.18.0.1/24
